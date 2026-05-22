@@ -3,7 +3,7 @@ API v1 main router. Includes all sub-routers.
 """
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import academic, export, lms, users, scheduler
+from app.api.v1.endpoints import academic, ai_scheduler, export, lms, users, scheduler
 from app.auth.router import router as auth_router
 
 api_router = APIRouter()
@@ -14,4 +14,5 @@ api_router.include_router(users.router)
 api_router.include_router(academic.router)
 api_router.include_router(lms.router)
 api_router.include_router(scheduler.router)
+api_router.include_router(ai_scheduler.router)
 api_router.include_router(export.router)

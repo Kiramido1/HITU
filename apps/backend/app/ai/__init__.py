@@ -1,15 +1,19 @@
 """
-HITU AI Module — Placeholder for future AI/ML enhancements.
+HITU AI Module — LLM-assisted scheduling intelligence.
 
 Current AI scheduling uses Google OR-Tools in services/scheduler.py.
-This module is reserved for future PyTorch/TensorFlow integrations:
-- Neural schedulers
-- Predictive analytics
-- Natural language processing
+This module provides LLM-powered analysis and recommendations via Ollama:
+- Pre-schedule constraint analysis
+- Optimization strategy recommendations
+- Schedule explanation in natural language
+- Infeasibility diagnosis and fix suggestions
 """
 
-# Future imports
-# from .predictive import PredictiveModel
-# from .nlp import CourseChatbot
+from app.ai.ollama_client import OllamaClient, OllamaError
+from app.ai.scheduling_assistant import SchedulingAssistant
 
-__all__ = []
+__all__ = [
+    "OllamaClient",
+    "OllamaError",
+    "SchedulingAssistant",
+]
