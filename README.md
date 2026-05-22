@@ -256,28 +256,56 @@ Key backend files:
 
 ## Database Architecture
 
-HITU uses Supabase PostgreSQL with SQLAlchemy models and Alembic migrations.
+HITU uses Supabase PostgreSQL with SQLAlchemy models and Alembic migrations. The architecture is logically divided into several core domains, ensuring modularity and robust data management.
 
-### Tables
+### 1. User & Access Management (RBAC)
 
-| Domain | Tables |
-| --- | --- |
-| RBAC | `users`, `roles`, `permissions`, `user_roles`, `role_permissions` |
-| Academic | `semesters`, `departments`, `academic_levels`, `courses` |
-| Scheduling | `course_assignments`, `halls`, `hall_availability`, `doctor_availability`, `assistant_availability`, `schedules`, `schedule_slots` |
-| Enrollment | `students`, `student_courses` |
-| LMS | `materials`, `assignments`, `submissions`, `notifications` |
-| Operations | `audit_logs`, `analytics`, `exports` |
+This module handles user identities, authentication, and Role-Based Access Control (RBAC).
 
-### Relationship Highlights
+*   **`users`**: The central table for all human actors in the system (Admins, Doctors, Assistants, Students). It stores authentication credentials, personal information, contact details, and links to their primary role and department.
+*   **`roles`**: Defines the system roles (e.g., admin, doctor, assistant, student). Roles can be system-defined or custom, and they bundle a set of permissions.
+*   **`permissions`**: Fine-grained access control rules defined by a resource and an action (e.g., `resource: lms`, `action: read`).
+*   **`user_roles`** (Join Table): Maps users to multiple roles if necessary.
+*   **`role_permissions`** (Join Table): Maps roles to their associated permissions.
 
-- Users have a primary role and many-to-many role memberships.
-- Roles have many-to-many permissions.
-- Departments contain academic levels, courses, and students.
-- Semesters contain departments, levels, courses, schedules, and schedule slots.
-- Courses map to doctors, assistants, students, materials, assignments, and schedule slots.
-- Schedules group AI-generated or manually edited schedule slots.
-- Audit, analytics, and exports support production observability and governance.
+### 2. Academic Core
+
+This module models the organizational structure of the university and the academic programs.
+
+*   **`semesters`**: Represents academic terms (e.g., Fall 2025). Tracks start/end dates, academic years, and active status.
+*   **`departments`**: Represents university departments (e.g., Computer Science). Tracks department heads and student counts.
+*   **`academic_levels`**: Represents the study years within a department (e.g., Level 1, Level 2).
+*   **`courses`**: Represents the subjects taught. Includes metadata like credit hours, required lecture/section counts, and links to the responsible doctor and department.
+*   **`course_assignments`**: Maps teaching staff (assistants/coordinators) to specific courses, tracking workload hours and sections.
+*   **`students`**: Extended profile information for users with the `student` role. Tracks GPA, enrollment year, and university ID.
+*   **`student_courses`** (Join Table): Tracks student enrollments in specific courses and their final grades.
+
+### 3. Scheduling & Resource Management
+
+This module is the backbone of the AI scheduling engine, tracking physical resources, human availability, and generated timetables.
+
+*   **`halls`**: Represents physical or virtual rooms. Tracks capacity, type (lecture, lab, seminar), and available equipment.
+*   **`hall_availability`**: Defines the operational hours and blocked times for each hall.
+*   **`doctor_availability`** & **`assistant_availability`**: Tracks the preferred and blocked time slots for teaching staff, acting as constraints for the AI scheduling engine.
+*   **`schedules`**: Represents a generated timetable for a specific semester. Tracks the status, the optimization score from the AI solver, and the chosen generation strategy.
+*   **`schedule_slots`**: The individual blocks of time within a schedule linking a course, a hall, a staff member, a day, and a time range. Flags if the slot was AI-generated.
+
+### 4. Learning Management System (LMS)
+
+This module handles the digital classroom experience, including content delivery and assessments.
+
+*   **`materials`**: Educational resources uploaded by instructors for specific courses. Tracks file metadata, material type, and publish status.
+*   **`assignments`**: Tasks or homework assigned to students. Tracks deadlines, maximum grades, late submission policies, and instructions.
+*   **`submissions`**: Student answers to assignments. Includes file uploads or text answers, submission time, late status, grades, and feedback.
+*   **`notifications`**: System alerts sent to users (e.g., "New assignment posted", "Schedule generated").
+
+### 5. Platform Operations & Telemetry
+
+This module ensures system observability, security auditing, and data export capabilities.
+
+*   **`audit_logs`**: A tamper-evident ledger of critical system actions (e.g., logins, data modifications). Tracks the actor, IP address, action type, and JSON snapshots.
+*   **`analytics`**: Time-series telemetry data capturing platform usage metrics (e.g., active users, seeded courses).
+*   **`exports`**: Tracks asynchronous background jobs for generating reports (e.g., Schedule PDFs, Analytics CSVs). Stores the file URL and job status.
 
 ### Migration Commands
 
